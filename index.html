@@ -28,14 +28,15 @@
 
             //Variáveis a serem mudadas
 
+            const iteracoes = 100
+
             //Genético
             const taxaMutacao = 0.01;
             const popsize = 100;
-            const iteracoes = 100;
 
             //Smilinguido
             const quantidadeFormigas = 10;
-            const coeficienteDeEvaporacao = 0.1;
+            const coeficienteDeEvaporacao = 0.01;
 
              //Gera um array [0,1,2..., 14]
             const cidades = new Array(15).fill(0).map((e,i) => i);
@@ -232,6 +233,11 @@
                             y: melhorCaminhoDaIteracao.distancia
                         })
 
+                        if(!this.melhorCaminho || this.melhorCaminho.distancia > melhorCaminhoDaIteracao.distancia){
+                            this.melhorCaminho = melhorCaminhoDaIteracao;
+                            this.iteracaoMelhorCaminho = i;
+                        } 
+
                         algoritmo.iterar()
 
                     }
@@ -333,17 +339,32 @@
             });
             chart.render();
 
-            const caminho = document.createElement("div");
+            const caminhoDiv = document.createElement("div");
 
-            console.log(algoritmo.getMostFit())
 
-            caminho.textContent ="Melhor caminho = [ "+ algoritmo.getMostFit().rota.map(gene=>gene+1).join(", ") + " ] com distância " + algoritmo.fitness(algoritmo.populacao[0])
+            const ultimoCaminho = algoritmo.getMostFit();
 
-            caminho.style.textAlign='center'
-            caminho.style.paddingTop= '50px'
-            caminho.style.fontSize = "20px"
+            caminhoDiv.textContent ="Ultimo Caminho = [ "+ ultimoCaminho.rota.map(cidade=>cidade+1).join(", ") + " ] com distância " + ultimoCaminho.distancia
 
-            document.body.appendChild(caminho);
+            caminhoDiv.style.textAlign='center'
+            caminhoDiv.style.paddingTop= '50px'
+            caminhoDiv.style.fontSize = "20px"
+
+            document.body.appendChild(caminhoDiv);
+
+            const caminhoDiv2 = document.createElement("div");
+
+
+            const melhorCaminho = logger.melhorCaminho;
+
+            caminhoDiv2.textContent ="Melhor Caminho = [ "+ melhorCaminho.rota.map(cidade=>cidade+1).join(", ") + " ] com distância " + melhorCaminho.distancia + " na iteração " + logger.iteracaoMelhorCaminho;
+
+            caminhoDiv2.style.textAlign='center'
+            caminhoDiv2.style.paddingTop= '50px'
+            caminhoDiv2.style.fontSize = "20px"
+
+            document.body.appendChild(caminhoDiv2);
+
 
 
         }
