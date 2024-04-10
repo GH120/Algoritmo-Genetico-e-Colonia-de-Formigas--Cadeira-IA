@@ -2,7 +2,7 @@
 //Cada rota vai ser um array de 1 ou 0 para todos os caminhos utilizados
 class Caminho {
 
-    constructor(...rotas){
+    constructor(rotas){
         this.genes = rotas;
         this.taxaMutacao = 0.01;
     }
@@ -86,12 +86,18 @@ class AlgoritmoGenetico{
 
         const distancias = this.custos;
 
-        const cidades = caminho.cidades;
+        const cidades = caminho.genes;
 
-        const arestas = cidades.slice(0, cidades.length - 1)
-                               .map((city,index) => [cidades[index], cidades[index + 1]]);
+        const arestas = cidades.map((city,index) => {
+
+                                    const atual = city;
+                                    const proxima = cidades[(index+1)%cidades.length]
+
+                                    return [atual, proxima]
+                               })
+            
         
-        const custo   = arestas.flatmap(aresta => distancias[arestas[0]][arestas[1]])
+        const custo   = arestas.flatMap(aresta => distancias[aresta[0]][aresta[1]])
                                 .reduce((a,b) => a+b);
 
         return custo;
@@ -122,4 +128,4 @@ const algoritmo = new AlgoritmoGenetico(cidades,distancias).gerarPopulacao();
 
 console.log(algoritmo)
 
-console.log()
+console.log(algoritmo.populacao.map(pop => algoritmo.fitness(pop)))
