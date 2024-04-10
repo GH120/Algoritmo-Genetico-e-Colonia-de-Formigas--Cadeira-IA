@@ -119,6 +119,8 @@ constructor(cidades, custos, quantidadePopulacao=100){
     this.custos    = custos;
     this.populacao = [];
     this.popsize   = quantidadePopulacao;
+
+    this.gerarPopulacao();
 }
 
 gerarPopulacao(){
