@@ -4,7 +4,7 @@ class Caminho {
 
     constructor(rotas){
         this.genes = rotas;
-        this.taxaMutacao = 0.01;
+        this.taxaMutacao = 0.5;
     }
 
     gerarDescendente(Pai){
@@ -16,13 +16,13 @@ class Caminho {
 
         const linhaDivisoria = Math.random() * tamanhoCromossomo;
 
-        const parteDaMae =  genesMae.split(         0        ,   linhaDivisoria );
+        const parteDaMae =  genesMae.filter((gene, indice) => indice <= linhaDivisoria);
 
         const parteDoPai =  genesPai.filter(gene => !parteDaMae.includes(gene));
                             
-        const genesFilho = parteDaMae + parteDoPai;
+        const genesFilho = parteDaMae.concat(parteDoPai);
 
-        const sofreuMutacao = this.taxaMutacao < Math.random();
+        const sofreuMutacao = Math.random() < this.taxaMutacao;
 
         const filho = new Caminho(genesFilho);
 
@@ -33,10 +33,10 @@ class Caminho {
 
     sofrerMutacao(){
 
-        const tamanhoCromossomo = this.genes.length;
+        const tamanhoCromossomo = this.genes.length - 1;
         
-        const posicao1 = Math.random() * tamanhoCromossomo;
-        const posicao2 = Math.random() * tamanhoCromossomo;
+        const posicao1 = Math.round(Math.random() * tamanhoCromossomo);
+        const posicao2 = Math.round(Math.random() * tamanhoCromossomo);
 
         const gene = this.genes[posicao1];
 
@@ -102,6 +102,54 @@ class AlgoritmoGenetico{
 
         return custo;
     }
+
+    iterar(){
+
+        const tamanhoPopulacao = this.populacao.length;
+
+        for(let i=0; i < tamanhoPopulacao; i++){
+
+            const IndexPai = Math.round(Math.random() * (tamanhoPopulacao - 1));
+            const IndexMae = Math.round(Math.random() * (tamanhoPopulacao - 1));
+
+            const pai = this.populacao[IndexPai];
+            const mae = this.populacao[IndexMae];
+
+            const filho = mae.gerarDescendente(pai);
+
+            this.populacao.push(filho);
+        }
+        
+        this.populacao.sort((a,b) => this.fitness(a) - this.fitness(b));
+
+        console.log(this.populacao.map(a => this.fitness(a)));
+
+        this.populacao = this.populacao.filter((pop, index) => index < tamanhoPopulacao);
+    }
+}
+
+class Logger {
+
+    constructor(algoritmo){
+
+        this.algoritmo  = algoritmo;
+        this.dataPoints = []
+    }
+
+    executar(iteracoes = 100){
+
+        for(let i =0; i < iteracoes; i++){
+            algoritmo.iterar()
+
+            const melhorCaminhoDaIteracao = algoritmo.populacao[0];
+
+            this.dataPoints.push({
+                x: algoritmo.fitness(melhorCaminhoDaIteracao),
+                y: i
+            })
+        }
+        
+    }
 }
 
 const cidades = new Array(15).fill(0).map((e,i) => i);
@@ -129,3 +177,11 @@ const algoritmo = new AlgoritmoGenetico(cidades,distancias).gerarPopulacao();
 console.log(algoritmo)
 
 console.log(algoritmo.populacao.map(pop => algoritmo.fitness(pop)))
+
+
+for(let i =0; i < 1000; i++){
+    algoritmo.iterar()
+}
+
+
+console.log(algoritmo)
