@@ -17,10 +17,25 @@
     <script scr="index.js">
         window.onload = function () {
 
+            //Escolha o algoritmo
+            const algoritmoEscolhido  = "Colônia de Formigas";
 
+            //Defina aqui as rotas para os algoritmos escolhidos
+            const algoritmos = {
+                "Colônia de Formigas": () => new AlgoritmoColoniaFormigas(quantidadeFormigas, coeficienteDeEvaporacao), 
+                "Genético": () => new AlgoritmoGenetico(cidades,distancias,popsize)
+            }
+
+            //Variáveis a serem mudadas
+
+            //Genético
             const taxaMutacao = 0.01;
             const popsize = 100;
-            const iteracoes = 3000;
+            const iteracoes = 100;
+
+            //Smilinguido
+            const quantidadeFormigas = 10;
+            const coeficienteDeEvaporacao = 0.1;
 
              //Gera um array [0,1,2..., 14]
             const cidades = new Array(15).fill(0).map((e,i) => i);
@@ -49,137 +64,136 @@
             //Cada rota vai ser um array de 1 ou 0 para todos os caminhos utilizados
             class Caminho {
 
-                constructor(rotas){
-                    this.genes = rotas;
-                    this.taxaMutacao = taxaMutacao;
-                }
+            constructor(cidades){
+                this.genes = cidades;
+                this.rota  = cidades;
+                this.taxaMutacao = taxaMutacao;
+                this.distancia   = this.calcularDistancia();
+            }
 
-                gerarDescendente(Pai){
+            gerarDescendente(Pai){
 
-                    const tamanhoCromossomo = this.genes.length;
+                const tamanhoCromossomo = this.genes.length;
 
-                    const genesMae = this.genes;
-                    const genesPai = Pai.genes;
+                const genesMae = this.genes;
+                const genesPai = Pai.genes;
 
-                    const linhaDivisoria = Math.random() * tamanhoCromossomo;
+                const linhaDivisoria = Math.random() * tamanhoCromossomo;
 
-                    const parteDaMae =  genesMae.filter((gene, indice) => indice <= linhaDivisoria);
+                const parteDaMae =  genesMae.filter((gene, indice) => indice <= linhaDivisoria);
 
-                    const parteDoPai =  genesPai.filter(gene => !parteDaMae.includes(gene));
-                                        
-                    const genesFilho = parteDaMae.concat(parteDoPai);
+                const parteDoPai =  genesPai.filter(gene => !parteDaMae.includes(gene));
+                                    
+                const genesFilho = parteDaMae.concat(parteDoPai);
 
-                    const sofreuMutacao = Math.random() < this.taxaMutacao;
+                const sofreuMutacao = Math.random() < this.taxaMutacao;
 
-                    const filho = new Caminho(genesFilho);
+                const filho = new Caminho(genesFilho);
 
-                    if(sofreuMutacao) filho.sofrerMutacao();
+                if(sofreuMutacao) filho.sofrerMutacao();
 
-                    return filho;
-                }
+                return filho;
+            }
 
-                sofrerMutacao(){
+            sofrerMutacao(){
 
-                    const tamanhoCromossomo = this.genes.length - 1;
+                const tamanhoCromossomo = this.genes.length - 1;
+                
+                const posicao1 = Math.round(Math.random() * tamanhoCromossomo);
+                const posicao2 = Math.round(Math.random() * tamanhoCromossomo);
+
+                const gene = this.genes[posicao1];
+
+                this.genes[posicao1] = this.genes[posicao2];
+                this.genes[posicao2] = gene;
+
+                return this;
+            }
+
+            calcularDistancia(){
+
+                const cidades = this.genes;
+
+                const arestas = cidades.map((city,index) => {
+
+                                            const atual = city;
+                                            const proxima = cidades[(index+1)%cidades.length]
+
+                                            return [atual, proxima]
+                                    })
                     
-                    const posicao1 = Math.round(Math.random() * tamanhoCromossomo);
-                    const posicao2 = Math.round(Math.random() * tamanhoCromossomo);
+                
+                const distanciaTotal   = arestas.flatMap(aresta => distancias[aresta[0]][aresta[1]])
+                                                .reduce((a,b) => a+b);
 
-                    const gene = this.genes[posicao1];
-
-                    this.genes[posicao1] = this.genes[posicao2];
-                    this.genes[posicao2] = gene;
-
-                    return this;
-                }
+                return distanciaTotal;
+            }
             }
 
             class AlgoritmoGenetico{
 
-                constructor(cidades, custos, quantidadePopulacao=100){
+            constructor(cidades, custos, quantidadePopulacao=100){
 
-                    this.cidades   = cidades;
-                    this.custos    = custos;
-                    this.populacao = [];
-                    this.popsize   = quantidadePopulacao;
+                this.cidades   = cidades;
+                this.custos    = custos;
+                this.populacao = [];
+                this.popsize   = quantidadePopulacao;
+            }
+
+            gerarPopulacao(){
+                
+                for(let i=0; i < this.popsize;i++){
+
+                    //Clona array das cidades usando map, pois não tem método clone no javascript
+                    const ordemDasCidadesVisitadas = this.cidades.map(e => e);
+
+                    //Permuta ordem das cidades para criar um caminho aleatório
+                    this.misturarArray(ordemDasCidadesVisitadas);
+
+                    const caminho = new Caminho(ordemDasCidadesVisitadas);
+
+                    this.populacao.push(caminho);
                 }
 
-                gerarPopulacao(){
-                    
-                    for(let i=0; i < this.popsize;i++){
+                return this;
+            }
 
-                        //Clona array das cidades usando map, pois não tem método clone no javascript
-                        const ordemDasCidadesVisitadas = this.cidades.map(e => e);
-
-                        //Permuta ordem das cidades para criar um caminho aleatório
-                        this.misturarArray(ordemDasCidadesVisitadas);
-
-                        const caminho = new Caminho(ordemDasCidadesVisitadas);
-
-                        this.populacao.push(caminho);
-                    }
-
-                    return this;
+            misturarArray(array) {
+                for (var i = array.length - 1; i > 0; i--) {
+                    var j = Math.floor(Math.random() * (i + 1));
+                    var temp = array[i];
+                    array[i] = array[j];
+                    array[j] = temp;
                 }
+            }
 
-                misturarArray(array) {
-                    for (var i = array.length - 1; i > 0; i--) {
-                        var j = Math.floor(Math.random() * (i + 1));
-                        var temp = array[i];
-                        array[i] = array[j];
-                        array[j] = temp;
-                    }
+            fitness(caminho){
+                return caminho.distancia;
+            }
+
+            iterar(){
+
+                const tamanhoPopulacao = this.populacao.length;
+
+                const descendentes = []; 
+
+                for(let i=0; i < tamanhoPopulacao*2; i++){
+
+                    const IndexPai = Math.round(Math.random() * (tamanhoPopulacao - 1));
+                    const IndexMae = Math.round(Math.random() * (tamanhoPopulacao - 1));
+
+                    const pai = this.populacao[IndexPai];
+                    const mae = this.populacao[IndexMae];
+
+                    const filho = mae.gerarDescendente(pai);
+
+                    descendentes.push(filho);
                 }
+                
+                descendentes.sort((a,b) => this.fitness(a) - this.fitness(b));
 
-                fitness(caminho){
-
-                    //Memoização, economiza memória
-                    if(caminho.distancia) return caminho.distancia;
-
-                    const distancias = this.custos;
-
-                    const cidades = caminho.genes;
-
-                    const arestas = cidades.map((city,index) => {
-
-                                                const atual = city;
-                                                const proxima = cidades[(index+1)%cidades.length]
-
-                                                return [atual, proxima]
-                                        })
-                        
-                    
-                    const distanciaTotal   = arestas.flatMap(aresta => distancias[aresta[0]][aresta[1]])
-                                                    .reduce((a,b) => a+b);
-
-                    caminho.distancia = distanciaTotal;
-
-                    return distanciaTotal;
-                }
-
-                iterar(){
-
-                    const tamanhoPopulacao = this.populacao.length;
-
-                    const descendentes = []; 
-
-                    for(let i=0; i < tamanhoPopulacao*2; i++){
-
-                        const IndexPai = Math.round(Math.random() * (tamanhoPopulacao - 1));
-                        const IndexMae = Math.round(Math.random() * (tamanhoPopulacao - 1));
-
-                        const pai = this.populacao[IndexPai];
-                        const mae = this.populacao[IndexMae];
-
-                        const filho = mae.gerarDescendente(pai);
-
-                        descendentes.push(filho);
-                    }
-                    
-                    descendentes.sort((a,b) => this.fitness(a) - this.fitness(b));
-
-                    this.populacao = descendentes.filter((pop, index) => index < tamanhoPopulacao);
-                }
+                this.populacao = descendentes.filter((pop, index) => index < tamanhoPopulacao);
+            }
 
                 roleta(){
 
@@ -188,6 +202,10 @@
                     const media = distanciaDeCadaCaminho.reduce((a,b) => a+b)/this.popsize;
 
                     const standardDeviation = distanciaDeCadaCaminho
+                }
+
+                getMostFit(){
+                    return this.populacao[0];
                 }
             }
 
@@ -205,11 +223,11 @@
 
                     for(let i =0; i < iteracoes; i++){
 
-                        let melhorCaminhoDaIteracao = algoritmo.populacao[0];
+                        let melhorCaminhoDaIteracao = algoritmo.getMostFit();
 
                         this.dataPoints.push({
                             x: i,
-                            y: algoritmo.fitness(melhorCaminhoDaIteracao)
+                            y: melhorCaminhoDaIteracao.distancia
                         })
 
                         algoritmo.iterar()
@@ -219,8 +237,69 @@
                 }
             }
 
+            class AlgoritmoColoniaFormigas {
+                constructor(num_ants, coef_de_evaporacao) {
+                    this.num_ants = num_ants;
+                    this.ants = [];
+                    this.coef_de_evaporacao = coef_de_evaporacao;
+                    this.pheromone_matrix = Array.from({ length: 15 }, () => Array(15).fill(1));
+                    this.initializeAnts();
+                    this.updatePheromoneMatrix();
+                }
 
-            const algoritmo = new AlgoritmoGenetico(cidades,distancias, popsize).gerarPopulacao();
+                initializeAnts() {
+                    for (let i = 0; i < this.num_ants; i++) {
+                        this.ants.push(new Caminho(Array.from({ length: 14 }, (_, index) => index + 1)));
+                    }
+                }
+
+                updatePheromoneMatrix() {
+                    let anterior = 0;
+                    this.pheromone_matrix = this.pheromone_matrix.map(row => row.map(() => (1 - this.coef_de_evaporacao)));
+                    for (const ant of this.ants) {
+                        for (const cidade of ant.rota) {
+                            this.pheromone_matrix[cidade][anterior] += 1 / ant.distancia;
+                            anterior = cidade;
+                        }
+                        this.pheromone_matrix[0][anterior] += 1 / ant.distancia;
+                    }
+                }
+
+                iterar() {
+
+                        const new_ants = [];
+                        for (let ant = 0; ant < this.num_ants; ant++) {
+                            const current_route = [];
+                            let remaining_choices = Array.from({ length: 14 }, (_, index) => index + 1);
+                            let tempRemainingChoices = [...remaining_choices]; // Create a copy of remaining_choices
+
+                            while (tempRemainingChoices.length > 0) {
+                                let probabilities = tempRemainingChoices.map(choice => (1 / distancias[choice][current_route[current_route.length - 1]]) * this.pheromone_matrix[choice][current_route[current_route.length - 1]]);
+                                probabilities = probabilities.map(prob => prob / probabilities.reduce((acc, val) => acc + val, 0));
+                                let step = tempRemainingChoices[Math.floor(Math.random() * tempRemainingChoices.length)];
+                                current_route.push(step);
+                                tempRemainingChoices = tempRemainingChoices.filter(choice => choice !== step);
+                            }
+
+                            new_ants.push(new Caminho(current_route, false));
+                        }
+                        this.ants = new_ants;
+                        this.updatePheromoneMatrix();
+                        this.ants.sort((a, b) => a.distancia - b.distancia);
+                        console.log(` Melhor distância = ${this.ants[0].distancia}`);
+                        console.log(` Melhor caminho = ${this.ants[0].rota}`);
+
+                }
+
+                getMostFit(){
+                    return this.ants[0];
+                }
+            }
+
+
+
+
+            const algoritmo = algoritmos[algoritmoEscolhido]();
 
             const logger = new Logger(algoritmo);
 
@@ -230,7 +309,9 @@
                 animationEnabled: true,
                 zoomEnabled: true,
                 title:{
-                    text: `Algoritmo Genético - População: ${algoritmo.popsize},  Mutação: ${taxaMutacao * 100}% `
+                    text: (algoritmoEscolhido == "Genético")? `Algoritmo Genético - População: ${algoritmo.popsize},  Mutação: ${taxaMutacao * 100}% ` :
+                          (algoritmoEscolhido == "Colônia de Formigas")?  `Algoritmo Colônia de Formigas - Formigas: ${algoritmo.num_ants},  Evaporação: ${coeficienteDeEvaporacao * 100}% ` :
+                          null
                 },
                 axisX: {
                     title:"Iteração",
@@ -252,7 +333,9 @@
 
             const caminho = document.createElement("div");
 
-            caminho.textContent ="Melhor caminho = [ "+ algoritmo.populacao[0].genes.map(gene=>gene+1).join(", ") + " ] com distância " + algoritmo.fitness(algoritmo.populacao[0])
+            console.log(algoritmo.getMostFit())
+
+            caminho.textContent ="Melhor caminho = [ "+ algoritmo.getMostFit().rota.map(gene=>gene+1).join(", ") + " ] com distância " + algoritmo.fitness(algoritmo.populacao[0])
 
             caminho.style.textAlign='center'
             caminho.style.paddingTop= '50px'
