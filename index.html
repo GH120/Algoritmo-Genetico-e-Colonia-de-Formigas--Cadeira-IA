@@ -1,8 +1,49 @@
 <!DOCTYPE HTML>
     <html>
-    <head>  
+    <head> 
+    <style>
+        div {
+            outline: none;
+            margin: 0px;
+            /* position: absolute; */
+            /* right: 2px; */
+            /* top: 356px; */
+            color: dimgrey;
+            text-decoration: none;
+            font-size: 11px;
+            font-family: Calibri, "Lucida Grande", "Lucida Sans Unicode", Arial, sans-serif;
+        }
+    </style> 
     <script scr="index.js">
         window.onload = function () {
+
+
+            const taxaMutacao = 0.01;
+            const popsize = 100;
+            const iteracoes = 3000;
+
+             //Gera um array [0,1,2..., 14]
+            const cidades = new Array(15).fill(0).map((e,i) => i);
+
+            //Matriz de distâncias entre cidades
+            const distancias = [
+                [  0,  10,  15,  45,   5,  45,  50,  44,  30, 100,  67,  33,  90,  17,  50],
+                [ 15,   0, 100,  30,  20,  25,  80,  45,  41,   5,  45,  10,  90,  10,  35],
+                [ 40,  80,   0,  90,  70,  33, 100,  70,  30,  23,  80,  60,  47,  33,  25],
+                [100,   8,   5,   0,   5,  40,  21,  20,  35,  14,  55,  35,  21,   5,  40],
+                [ 17,  10,  33,  45,   0,  14,  50,  27,  33,  60,  17,  10,  20,  13,  71],
+                [ 15,  70,  90,  20,  11,   0,  15,  35,  30,  15,  18,  35,  15,  90,  23],
+                [ 25,  19,  18,  30, 100,  55,   0,  70,  55,  41,  55, 100,  18,  14,  18],
+                [ 40,  15,  60,  45,  70,  33,  25,   0,  27,  60,  80,  35,  30,  41,  35],
+                [ 21,  34,  17,  10,  11,  40,   8,  32,   0,  47,  76,  40,  21,  90,  21],
+                [ 35, 100,   5,  18,  43,  25,  14,  30,  39,   0,  17,  35,  15,  13,  40],
+                [ 38,  20,  23,  30,   5,  55,  50,  33,  70,  14,   0,  60,  30,  35,  21],
+                [ 15,  14,  45,  21, 100,  10,   8,  20,  35,  43,   8,   0,  15, 100,  23],
+                [ 80,  10,   5,  20,  35,   8,  90,   5,  44,  10,  80,  14,   0,  25,  80],
+                [ 33,  90,  40,  18,  70,  45,  25,  23,  90,  44,  43,  70,   5,   0,  25],
+                [ 25,  70,  45,  50,   5,  45,  20, 100,  25,  50,  35,  10,  90,   5,   0],
+            ];
+
 
                         
             //Cada rota vai ser um array de 1 ou 0 para todos os caminhos utilizados
@@ -10,7 +51,7 @@
 
                 constructor(rotas){
                     this.genes = rotas;
-                    this.taxaMutacao = 0.5;
+                    this.taxaMutacao = taxaMutacao;
                 }
 
                 gerarDescendente(Pai){
@@ -32,7 +73,7 @@
 
                     const filho = new Caminho(genesFilho);
 
-                    if(sofreuMutacao) return filho.sofrerMutacao();
+                    if(sofreuMutacao) filho.sofrerMutacao();
 
                     return filho;
                 }
@@ -67,8 +108,10 @@
                     
                     for(let i=0; i < this.popsize;i++){
 
+                        //Clona array das cidades usando map, pois não tem método clone no javascript
                         const ordemDasCidadesVisitadas = this.cidades.map(e => e);
 
+                        //Permuta ordem das cidades para criar um caminho aleatório
                         this.misturarArray(ordemDasCidadesVisitadas);
 
                         const caminho = new Caminho(ordemDasCidadesVisitadas);
@@ -90,6 +133,9 @@
 
                 fitness(caminho){
 
+                    //Memoização, economiza memória
+                    if(caminho.distancia) return caminho.distancia;
+
                     const distancias = this.custos;
 
                     const cidades = caminho.genes;
@@ -103,17 +149,21 @@
                                         })
                         
                     
-                    const custo   = arestas.flatMap(aresta => distancias[aresta[0]][aresta[1]])
-                                            .reduce((a,b) => a+b);
+                    const distanciaTotal   = arestas.flatMap(aresta => distancias[aresta[0]][aresta[1]])
+                                                    .reduce((a,b) => a+b);
 
-                    return custo;
+                    caminho.distancia = distanciaTotal;
+
+                    return distanciaTotal;
                 }
 
                 iterar(){
 
                     const tamanhoPopulacao = this.populacao.length;
 
-                    for(let i=0; i < tamanhoPopulacao; i++){
+                    const descendentes = []; 
+
+                    for(let i=0; i < tamanhoPopulacao*2; i++){
 
                         const IndexPai = Math.round(Math.random() * (tamanhoPopulacao - 1));
                         const IndexMae = Math.round(Math.random() * (tamanhoPopulacao - 1));
@@ -123,14 +173,21 @@
 
                         const filho = mae.gerarDescendente(pai);
 
-                        this.populacao.push(filho);
+                        descendentes.push(filho);
                     }
                     
-                    this.populacao.sort((a,b) => this.fitness(a) - this.fitness(b));
+                    descendentes.sort((a,b) => this.fitness(a) - this.fitness(b));
 
-                    console.log(this.populacao.map(a => this.fitness(a)));
+                    this.populacao = descendentes.filter((pop, index) => index < tamanhoPopulacao);
+                }
 
-                    this.populacao = this.populacao.filter((pop, index) => index < tamanhoPopulacao);
+                roleta(){
+
+                    const distanciaDeCadaCaminho = this.populacao.map(caminho => this.fitness(caminho));
+
+                    const media = distanciaDeCadaCaminho.reduce((a,b) => a+b)/this.popsize;
+
+                    const standardDeviation = distanciaDeCadaCaminho
                 }
             }
 
@@ -144,11 +201,11 @@
 
                 executar(iteracoes = 100){
 
+                    this.iteracoes = iteracoes;
+
                     for(let i =0; i < iteracoes; i++){
 
                         let melhorCaminhoDaIteracao = algoritmo.populacao[0];
-
-                        if(i==0) melhorCaminhoDaIteracao = 
 
                         this.dataPoints.push({
                             x: i,
@@ -162,43 +219,23 @@
                 }
             }
 
-            const cidades = new Array(15).fill(0).map((e,i) => i);
 
-            const distancias = [
-                [  0,  10,  15,  45,   5,  45,  50,  44,  30, 100,  67,  33,  90,  17,  50],
-                [ 15,   0, 100,  30,  20,  25,  80,  45,  41,   5,  45,  10,  90,  10,  35],
-                [ 40,  80,   0,  90,  70,  33, 100,  70,  30,  23,  80,  60,  47,  33,  25],
-                [100,   8,   5,   0,   5,  40,  21,  20,  35,  14,  55,  35,  21,   5,  40],
-                [ 17,  10,  33,  45,   0,  14,  50,  27,  33,  60,  17,  10,  20,  13,  71],
-                [ 15,  70,  90,  20,  11,   0,  15,  35,  30,  15,  18,  35,  15,  90,  23],
-                [ 25,  19,  18,  30, 100,  55,   0,  70,  55,  41,  55, 100,  18,  14,  18],
-                [ 40,  15,  60,  45,  70,  33,  25,   0,  27,  60,  80,  35,  30,  41,  35],
-                [ 21,  34,  17,  10,  11,  40,   8,  32,   0,  47,  76,  40,  21,  90,  21],
-                [ 35, 100,   5,  18,  43,  25,  14,  30,  39,   0,  17,  35,  15,  13,  40],
-                [ 38,  20,  23,  30,   5,  55,  50,  33,  70,  14,   0,  60,  30,  35,  21],
-                [ 15,  14,  45,  21, 100,  10,   8,  20,  35,  43,   8,   0,  15, 100,  23],
-                [ 80,  10,   5,  20,  35,   8,  90,   5,  44,  10,  80,  14,   0,  25,  80],
-                [ 33,  90,  40,  18,  70,  45,  25,  23,  90,  44,  43,  70,   5,   0,  25],
-                [ 25,  70,  45,  50,   5,  45,  20, 100,  25,  50,  35,  10,  90,   5,   0],
-            ];
-
-            const algoritmo = new AlgoritmoGenetico(cidades,distancias).gerarPopulacao();
+            const algoritmo = new AlgoritmoGenetico(cidades,distancias, popsize).gerarPopulacao();
 
             const logger = new Logger(algoritmo);
 
-            logger.executar();
-
+            logger.executar(iteracoes);
 
             var chart = new CanvasJS.Chart("chartContainer", {
                 animationEnabled: true,
                 zoomEnabled: true,
                 title:{
-                    text: "Real Estate Rates"
+                    text: `Algoritmo Genético - População: ${algoritmo.popsize},  Mutação: ${taxaMutacao * 100}% `
                 },
                 axisX: {
                     title:"Iteração",
                     minimum: 0,
-                    maximum: 100
+                    maximum: logger.iteracoes
                 },
                 axisY:{
                     title: "Distância",
@@ -212,6 +249,17 @@
                 }]
             });
             chart.render();
+
+            const caminho = document.createElement("div");
+
+            caminho.textContent ="Melhor caminho = [ "+ algoritmo.populacao[0].genes.map(gene=>gene+1).join(", ") + " ] com distância " + algoritmo.fitness(algoritmo.populacao[0])
+
+            caminho.style.textAlign='center'
+            caminho.style.paddingTop= '50px'
+            caminho.style.fontSize = "20px"
+
+            document.body.appendChild(caminho);
+
 
         }
     </script>
