@@ -10,7 +10,7 @@
 
                 constructor(rotas){
                     this.genes = rotas;
-                    this.taxaMutacao = 0.1;
+                    this.taxaMutacao = 0.5;
                 }
 
                 gerarDescendente(Pai){
@@ -145,14 +145,18 @@
                 executar(iteracoes = 100){
 
                     for(let i =0; i < iteracoes; i++){
-                        algoritmo.iterar()
 
-                        const melhorCaminhoDaIteracao = algoritmo.populacao[0];
+                        let melhorCaminhoDaIteracao = algoritmo.populacao[0];
+
+                        if(i==0) melhorCaminhoDaIteracao = 
 
                         this.dataPoints.push({
-                            x: algoritmo.fitness(melhorCaminhoDaIteracao),
-                            y: i
+                            x: i,
+                            y: algoritmo.fitness(melhorCaminhoDaIteracao)
                         })
+
+                        algoritmo.iterar()
+
                     }
                     
                 }
@@ -185,8 +189,6 @@
             logger.executar();
 
 
-            console.log(algoritmo,logger)
-
             var chart = new CanvasJS.Chart("chartContainer", {
                 animationEnabled: true,
                 zoomEnabled: true,
@@ -194,17 +196,18 @@
                     text: "Real Estate Rates"
                 },
                 axisX: {
-                    title:"Area (in sq. ft)",
-                    minimum: 790,
-                    maximum: 2260
+                    title:"Iteração",
+                    minimum: 0,
+                    maximum: 100
                 },
                 axisY:{
-                    title: "Price (in USD)",
-                    valueFormatString: "$#,##0k"
+                    title: "Distância",
+                    minimum: 0
+                    // valueFormatString: "$#,##0k"
                 },
                 data: [{
                     type: "scatter",
-                    toolTipContent: "<b>Area: </b>{x} sq.ft<br/><b>Price: </b>${y}k",
+                    toolTipContent: "<b>Iteração: </b>{x} <br/><b>Distância: </b>{y}",
                     dataPoints: [...logger.dataPoints]
                 }]
             });
