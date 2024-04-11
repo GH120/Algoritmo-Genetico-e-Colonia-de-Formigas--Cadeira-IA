@@ -59,7 +59,55 @@
             background-color: #0056b3;
         }
     </style>
+    </head>
+    <body>
 
+        <div id="container">
+            <div id="chartContainer" style="height: 370px; width: 100%;"></div>
+        </div>
+
+        <div id="formContainer">
+            <h1>Editar Variáveis</h1>
+            <form id="variableForm">
+                <label for="algoritmo">Escolha o algoritmo:</label>
+                <select id="algoritmo" name="algoritmo">
+                    <option value="Colônia de Formigas">Colônia de
+                        Formigas</option>
+                    <option value="Genético">Genético</option>
+                </select><br><br>
+
+                <label for="iteracoes">Iterações:</label>
+                <input type="number" id="iteracoes" name="iteracoes"
+                    value="100"><br><br>
+
+                <div id="geneticVariables" class="genetic-variables">
+                    <label for="taxaMutacao">Taxa de Mutação:</label>
+                    <input type="number" id="taxaMutacao" name="taxaMutacao"
+                        step="0.01" value="0.01"><br><br>
+
+                    <label for="popsize">Tamanho da População:</label>
+                    <input type="number" id="popsize" name="popsize"
+                        value="100"><br><br>
+                </div>
+
+                <div id="antVariables" class="ant-variables">
+                    <label for="quantidadeFormigas">Quantidade de
+                        Formigas:</label>
+                    <input type="number" id="quantidadeFormigas"
+                        name="quantidadeFormigas" value="1000"><br><br>
+
+                    <label for="coeficienteDeEvaporacao">Coeficiente de
+                        Evaporação:</label>
+                    <input type="number" id="coeficienteDeEvaporacao"
+                        name="coeficienteDeEvaporacao" step="0.01"
+                        value="0.5"><br><br>
+                </div>
+
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+
+        <!-- LÓGICA DO PROGRAMA -->
         <script>
 
             //Toda a lógica do programa de usar o algoritmo e criar o gráfico
@@ -442,58 +490,7 @@
     });
 
         </script>
-    </head>
-    <body>
-        <div id="container">
-            <div id="chartContainer" style="height: 370px; width: 100%;"></div>
-        </div>
 
-        <script scr="teste.js"> </script>
-
-        <script>
-        console.log(teste)
-    </script>
-
-        <div id="formContainer">
-            <h1>Editar Variáveis</h1>
-            <form id="variableForm">
-                <label for="algoritmo">Escolha o algoritmo:</label>
-                <select id="algoritmo" name="algoritmo">
-                    <option value="Colônia de Formigas">Colônia de
-                        Formigas</option>
-                    <option value="Genético">Genético</option>
-                </select><br><br>
-
-                <label for="iteracoes">Iterações:</label>
-                <input type="number" id="iteracoes" name="iteracoes"
-                    value="100"><br><br>
-
-                <div id="geneticVariables" class="genetic-variables">
-                    <label for="taxaMutacao">Taxa de Mutação:</label>
-                    <input type="number" id="taxaMutacao" name="taxaMutacao"
-                        step="0.01" value="0.01"><br><br>
-
-                    <label for="popsize">Tamanho da População:</label>
-                    <input type="number" id="popsize" name="popsize"
-                        value="100"><br><br>
-                </div>
-
-                <div id="antVariables" class="ant-variables">
-                    <label for="quantidadeFormigas">Quantidade de
-                        Formigas:</label>
-                    <input type="number" id="quantidadeFormigas"
-                        name="quantidadeFormigas" value="1000"><br><br>
-
-                    <label for="coeficienteDeEvaporacao">Coeficiente de
-                        Evaporação:</label>
-                    <input type="number" id="coeficienteDeEvaporacao"
-                        name="coeficienteDeEvaporacao" step="0.01"
-                        value="0.5"><br><br>
-                </div>
-
-                <input type="submit" value="Submit">
-            </form>
-        </div>
 
         <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
     </body>
