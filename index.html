@@ -35,8 +35,8 @@
             const popsize = 100;
 
             //Smilinguido
-            const quantidadeFormigas = 10;
-            const coeficienteDeEvaporacao = 0.01;
+            const quantidadeFormigas = 1000;
+            const coeficienteDeEvaporacao = 0.5;
 
              //Gera um array [0,1,2..., 14]
             const cidades = new Array(15).fill(0).map((e,i) => i);
@@ -344,7 +344,9 @@
 
             const ultimoCaminho = algoritmo.getMostFit();
 
-            caminhoDiv.textContent ="Ultimo Caminho = [ "+ ultimoCaminho.rota.map(cidade=>cidade+1).join(", ") + " ] com distância " + ultimoCaminho.distancia
+            ultimoCaminho.rota.push(0); //Gambiarra, rota no algoritmo das formigas ignora o 0
+
+            caminhoDiv.textContent ="Ultimo Caminho = [ "+ ultimoCaminho.rota.map(cidade => cidade+1).join(", ") + " ] com distância " + ultimoCaminho.distancia
 
             caminhoDiv.style.textAlign='center'
             caminhoDiv.style.paddingTop= '50px'
@@ -357,7 +359,9 @@
 
             const melhorCaminho = logger.melhorCaminho;
 
-            caminhoDiv2.textContent ="Melhor Caminho = [ "+ melhorCaminho.rota.map(cidade=>cidade+1).join(", ") + " ] com distância " + melhorCaminho.distancia + " na iteração " + logger.iteracaoMelhorCaminho;
+            melhorCaminho.rota.push(0); //Gambiarra, rota no algoritmo das formigas ignora o 0
+
+            caminhoDiv2.textContent ="Melhor Caminho = [ "+ melhorCaminho.rota.map(cidade => cidade+1).join(", ") + " ] com distância " + melhorCaminho.distancia + " na iteração " + logger.iteracaoMelhorCaminho;
 
             caminhoDiv2.style.textAlign='center'
             caminhoDiv2.style.paddingTop= '50px'
