@@ -8,4 +8,5 @@
 
 ## Edição - Escolha os parâmetros e aperte submit
 
-![image](https://github.com/GH120/Algoritmo-Genetico-e-Colonia-de-Formigas--Cadeira-IA/assets/90730714/01a5379e-9717-423b-a45f-040a5f21b512)
+![image](https://github.com/GH120/Algoritmo-Genetico-e-Colonia-de-Formigas--Cadeira-IA/assets/90730714/e1896a17-b416-4b78-9f5c-9c0c83bedcc0)
+
