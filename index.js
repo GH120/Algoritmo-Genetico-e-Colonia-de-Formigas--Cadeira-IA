@@ -1,22 +1,11 @@
-//Escolha o algoritmo
-const algoritmoEscolhido  = "Colônia de Formigas";
+function criarGrafico(algoritmoEscolhido, iteracoes, taxaMutacao, popsize, quantidadeFormigas, coeficienteDeEvaporacao){
+
 
 //Defina aqui as rotas para os algoritmos escolhidos
 const algoritmos = {
     "Colônia de Formigas": () => new AlgoritmoColoniaFormigas(quantidadeFormigas, coeficienteDeEvaporacao), 
     "Genético": () => new AlgoritmoGenetico(cidades,distancias,popsize)
 }
-
-//Variáveis a serem mudadas
-
-//Genético
-const taxaMutacao = 0.01;
-const popsize = 100;
-const iteracoes = 100;
-
-//Smilinguido
-const quantidadeFormigas = 10;
-const coeficienteDeEvaporacao = 0.1;
 
  //Gera um array [0,1,2..., 14]
 const cidades = new Array(15).fill(0).map((e,i) => i);
@@ -119,7 +108,7 @@ constructor(cidades, custos, quantidadePopulacao=100){
     this.custos    = custos;
     this.populacao = [];
     this.popsize   = quantidadePopulacao;
-
+    
     this.gerarPopulacao();
 }
 
@@ -213,6 +202,11 @@ class Logger {
                 y: melhorCaminhoDaIteracao.distancia
             })
 
+            if(!this.melhorCaminho || this.melhorCaminho.distancia > melhorCaminhoDaIteracao.distancia){
+                this.melhorCaminho = melhorCaminhoDaIteracao;
+                this.iteracaoMelhorCaminho = i;
+            } 
+
             algoritmo.iterar()
 
         }
@@ -287,3 +281,63 @@ const algoritmo = algoritmos[algoritmoEscolhido]();
 const logger = new Logger(algoritmo);
 
 logger.executar(iteracoes);
+
+var chart = new CanvasJS.Chart("chartContainer", {
+    animationEnabled: true,
+    zoomEnabled: true,
+    title:{
+        text: (algoritmoEscolhido == "Genético")? `Algoritmo Genético - População: ${algoritmo.popsize},  Mutação: ${taxaMutacao * 100}% ` :
+              (algoritmoEscolhido == "Colônia de Formigas")?  `Algoritmo Colônia de Formigas - Formigas: ${algoritmo.num_ants},  Evaporação: ${coeficienteDeEvaporacao * 100}% ` :
+              null
+    },
+    axisX: {
+        title:"Iteração",
+        minimum: 0,
+        maximum: logger.iteracoes
+    },
+    axisY:{
+        title: "Distância",
+        minimum: 0
+        // valueFormatString: "$#,##0k"
+    },
+    data: [{
+        type: "scatter",
+        toolTipContent: "<b>Iteração: </b>{x} <br/><b>Distância: </b>{y}",
+        dataPoints: [...logger.dataPoints]
+    }]
+});
+chart.render();
+
+const caminhoDiv = document.createElement("div");
+
+
+const ultimoCaminho = algoritmo.getMostFit();
+
+ultimoCaminho.rota.push(0); //Gambiarra, rota no algoritmo das formigas ignora o 0
+
+caminhoDiv.textContent ="Ultimo Caminho = [ "+ ultimoCaminho.rota.map(cidade => cidade+1).join(", ") + " ] com distância " + ultimoCaminho.distancia
+
+caminhoDiv.style.textAlign='center'
+caminhoDiv.style.paddingTop= '50px'
+caminhoDiv.style.fontSize = "20px"
+
+document.getElementById("container").appendChild(caminhoDiv);
+
+const caminhoDiv2 = document.createElement("div");
+
+
+const melhorCaminho = logger.melhorCaminho;
+
+melhorCaminho.rota.push(0); //Gambiarra, rota no algoritmo das formigas ignora o 0
+
+caminhoDiv2.textContent ="Melhor Caminho = [ "+ melhorCaminho.rota.map(cidade => cidade+1).join(", ") + " ] com distância " + melhorCaminho.distancia + " na iteração " + logger.iteracaoMelhorCaminho;
+
+caminhoDiv2.style.textAlign='center'
+caminhoDiv2.style.paddingTop= '50px'
+caminhoDiv2.style.fontSize = "20px"
+
+document.getElementById("container").appendChild(caminhoDiv2);
+
+
+
+}
