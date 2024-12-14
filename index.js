@@ -116,9 +116,17 @@
 
                                                 return [atual, proxima]
                                         })
-                        
+
                     
-                    const distanciaTotal   = arestas.flatMap(aresta => distancias[aresta[0]][aresta[1]])
+
+                    const distanciaTotal   = arestas.flatMap(aresta => {
+                                                        try{
+                                                            return distancias[aresta[0]][aresta[1]]
+                                                        }
+                                                        catch(e){
+                                                            console.log(aresta, aresta[0],aresta[1])
+                                                        }
+                                                    })
                                                     .reduce((a,b) => a+b);
 
                     return distanciaTotal;
@@ -277,7 +285,7 @@
 
             initializeAnts() {
                 for (let i = 0; i < this.num_ants; i++) {
-                    this.ants.push(new Caminho([i]));
+                    this.ants.push(new Caminho([0])); //Todas as formigas começam na origem
                 }
             }
 
@@ -285,9 +293,12 @@
                 let anterior = 0;
                 this.matrizFeromonios = this.matrizFeromonios.map(row => row.map(() => (1 - this.evaporacao)));
                 for (const ant of this.ants) {
+                    if(ant.distancia == 0) continue;
                     for (const cidade of ant.rota) {
-                        const distancia = (ant.distancia == 0)? 0.00000000001 : ant.distancia
-                        this.matrizFeromonios[cidade][anterior] += 1 / distancia;
+
+                        console.log(cidade,anterior)
+
+                        this.matrizFeromonios[cidade][anterior] += 1 / ant.distancia;
                         anterior = cidade;
                     }
                     this.matrizFeromonios[0][anterior] += 1 / ant.distancia;
@@ -297,30 +308,28 @@
             iterar() {
 
                     const new_ants = [];
-                    for (let ant = 0; ant < this.num_ants; ant++) {
+                    for (const ant of this.ants) {
                         
-                        const rotaAtual = [];
+                        const rotaAtual = [...ant.rota];
 
-                        let escolhas = Array.from({ length: 14 }, (_, index) => index + 1);
-                        let escolhasRestantes = [...escolhas]; // Create a copy of remaining_choices
+                        //Cidades que podem ser escolhidas
+                        let escolhas = new Array(15).fill(0).map((e,i) => i).filter(i => !(i in ant.rota));
 
-                        //Cria uma rota iterando pelas escolhas restantes
-                        while (escolhasRestantes.length > 0) {
+                        console.log(escolhas, ant.rota)
 
-                            //Calcula a probabilidade bruta, depois nivela para conseguir a probabilidade de 0 a 1
-                            const probabilidadeBruta = escolhasRestantes.map(cidade => this.calcularProbabilidade(cidade, rotaAtual))
+                        //Calcula a probabilidade bruta, depois nivela para conseguir a probabilidade de 0 a 1
+                        const probabilidadeBruta = escolhas.map(cidade => this.calcularProbabilidade(cidade, ant.rota))
 
-                            const probabilidadeTotal = probabilidadeBruta.reduce((acc, val) => acc + val, 0);
+                        const probabilidadeTotal = probabilidadeBruta.reduce((acc, val) => acc + val, 0);
 
-                            const probabilidades = probabilidadeBruta.map(prob => prob / probabilidadeTotal);
+                        const probabilidades = probabilidadeBruta.map(prob => prob / probabilidadeTotal);
 
-                            //Escolhe a cidade aleatoriamente ponderado na probabilidade
-                            const cidadeEscolhida = this.escolherCidade(escolhasRestantes, probabilidades);
+                        //Escolhe a cidade aleatoriamente ponderado na probabilidade
+                        const cidadeEscolhida = this.escolherCidade(escolhas, probabilidades);
 
-                            rotaAtual.push(cidadeEscolhida);
+                        rotaAtual.push(cidadeEscolhida);
 
-                            escolhasRestantes = escolhasRestantes.filter(choice => choice !== step);
-                        }
+                        escolhas = escolhas.filter(choice => choice !== cidadeEscolhida);
 
                         new_ants.push(new Caminho(rotaAtual, false));
                     }
@@ -336,9 +345,13 @@
 
                 const ultimaCidadeDaRota = rotaAtual[rotaAtual.length - 1];
 
+                console.log(this.matrizFeromonios)
+                console.log(this.matrizFeromonios[cidade])
+                console.log(this.matrizFeromonios[cidade][ultimaCidadeDaRota])
+
                 const tij = (1 / distancias[cidade][ultimaCidadeDaRota]); //Fator heurístico
 
-                const nij = this.pheromone_matrix[cidade][ultimaCidadeDaRota]; //Fator dos feromônios
+                const nij = this.matrizFeromonios[cidade][ultimaCidadeDaRota]; //Fator dos feromônios
 
                 const fatorHeuristico = tij ** (this.beta);
                 const fatorFeromonico = nij ** (this.alpha);
@@ -346,7 +359,7 @@
                 return fatorFeromonico * fatorHeuristico;
             }
 
-            escolherCidade(escolhasRestantes, probabilidades){
+            escolherCidade(escolhas, probabilidades){
 
                 const numeroAleatorio = Math.random();
 
@@ -361,9 +374,10 @@
                     indice++;
                 }
 
-                indice = Math.max(indice, escolhasRestantes.length - 1)
+                indice = Math.min(indice, escolhas.length - 1)
 
-                return escolhasRestantes[indice];
+
+                return escolhas[indice];
             }
 
             getMostFit(){
