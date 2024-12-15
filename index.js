@@ -272,9 +272,8 @@
         }
 
         class AlgoritmoColoniaFormigas {
-            constructor(num_ants, evaporacao, alpha, beta) {
+            constructor(num_ants, evaporacao, alpha=1, beta=1) {
                 this.num_ants = num_ants;
-                this.ants = [];
                 this.evaporacao = evaporacao;
                 this.alpha = alpha
                 this.beta = beta
@@ -284,9 +283,7 @@
             }
 
             initializeAnts() {
-                for (let i = 0; i < this.num_ants; i++) {
-                    this.ants.push(new Caminho([0])); //Todas as formigas começam na origem
-                }
+                this.ants = new Array(this.num_ants).fill(0).map(e => new Caminho([0]));
             }
 
             updatePheromoneMatrix() {
@@ -296,48 +293,66 @@
                     if(ant.distancia == 0) continue;
                     for (const cidade of ant.rota) {
 
-                        console.log(cidade,anterior)
-
-                        this.matrizFeromonios[cidade][anterior] += 1 / ant.distancia;
+                        this.matrizFeromonios[cidade][anterior] += 500 / ant.distancia;
                         anterior = cidade;
                     }
-                    this.matrizFeromonios[0][anterior] += 1 / ant.distancia;
+                    this.matrizFeromonios[0][anterior] += 500 / ant.distancia;
                 }
             }
 
             iterar() {
 
-                    const new_ants = [];
-                    for (const ant of this.ants) {
+                    this.initializeAnts();
+
+                    console.log(this.matrizFeromonios)
+                    
+                    while(true){
+
+                        const new_ants = [];
+
+                        for (const ant of this.ants) {
+                            
+                            const rotaAtual = [...ant.rota];
+
+                            //Cidades que podem ser escolhidas
+                            let escolhas = new Array(15).fill(0)
+                                                        .map((e,i) => i)
+                                                        .filter(i => {
+                                                            for(const cidade of rotaAtual){
+                                                                if(cidade == i) return false;
+                                                            }
+                                                            return true;
+                                                        });
+                                
+                            if(escolhas.length == 0){
+                                this.updatePheromoneMatrix();
+                                return;
+                            }
+                            
+
+                            //Calcula a probabilidade bruta, depois nivela para conseguir a probabilidade de 0 a 1
+                            const probabilidadeBruta = escolhas.map(cidade => this.calcularProbabilidade(cidade, ant.rota))
+
+                            const probabilidadeTotal = probabilidadeBruta.reduce((acc, val) => acc + val, 0);
+
+                            const probabilidades = probabilidadeBruta.map(prob => prob / probabilidadeTotal);
+
+                            //Escolhe a cidade aleatoriamente ponderado na probabilidade
+                            const cidadeEscolhida = this.escolherCidade(escolhas, probabilidades);
+
+                            rotaAtual.push(cidadeEscolhida);
+
+                            escolhas = escolhas.filter(choice => choice !== cidadeEscolhida);
+
+                            new_ants.push(new Caminho(rotaAtual, false));
+                        }
                         
-                        const rotaAtual = [...ant.rota];
-
-                        //Cidades que podem ser escolhidas
-                        let escolhas = new Array(15).fill(0).map((e,i) => i).filter(i => !(i in ant.rota));
-
-                        console.log(escolhas, ant.rota)
-
-                        //Calcula a probabilidade bruta, depois nivela para conseguir a probabilidade de 0 a 1
-                        const probabilidadeBruta = escolhas.map(cidade => this.calcularProbabilidade(cidade, ant.rota))
-
-                        const probabilidadeTotal = probabilidadeBruta.reduce((acc, val) => acc + val, 0);
-
-                        const probabilidades = probabilidadeBruta.map(prob => prob / probabilidadeTotal);
-
-                        //Escolhe a cidade aleatoriamente ponderado na probabilidade
-                        const cidadeEscolhida = this.escolherCidade(escolhas, probabilidades);
-
-                        rotaAtual.push(cidadeEscolhida);
-
-                        escolhas = escolhas.filter(choice => choice !== cidadeEscolhida);
-
-                        new_ants.push(new Caminho(rotaAtual, false));
+                        this.ants = new_ants;
+                        this.ants.sort((a, b) => a.distancia - b.distancia);
+                        // console.log(this.ants)
+                        // console.log(` Melhor distância = ${this.ants[0].distancia}`);
+                        // console.log(` Melhor caminho = ${this.ants[0].rota}`);
                     }
-                    this.ants = new_ants;
-                    this.updatePheromoneMatrix();
-                    this.ants.sort((a, b) => a.distancia - b.distancia);
-                    console.log(` Melhor distância = ${this.ants[0].distancia}`);
-                    console.log(` Melhor caminho = ${this.ants[0].rota}`);
 
             }
 
@@ -345,16 +360,13 @@
 
                 const ultimaCidadeDaRota = rotaAtual[rotaAtual.length - 1];
 
-                console.log(this.matrizFeromonios)
-                console.log(this.matrizFeromonios[cidade])
-                console.log(this.matrizFeromonios[cidade][ultimaCidadeDaRota])
-
                 const tij = (1 / distancias[cidade][ultimaCidadeDaRota]); //Fator heurístico
 
                 const nij = this.matrizFeromonios[cidade][ultimaCidadeDaRota]; //Fator dos feromônios
 
                 const fatorHeuristico = tij ** (this.beta);
                 const fatorFeromonico = nij ** (this.alpha);
+
 
                 return fatorFeromonico * fatorHeuristico;
             }
@@ -375,7 +387,6 @@
                 }
 
                 indice = Math.min(indice, escolhas.length - 1)
-
 
                 return escolhas[indice];
             }
